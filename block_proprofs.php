@@ -39,18 +39,38 @@ class block_proprofs extends block_base {
         return $result;
     }
 
+    private function storeUserData() {
+        // The global DB variable is used to interact with
+        // the moodle database
+        // docs found here https://docs.moodle.org/dev/Data_manipulation_API
+        global $DB, $USER;
+        $conditions = array();
+        $conditions["email"] = $USER->email;
+
+        // $record = $DB->get_record('user', $conditions);
+        $DB->insert_record('user', );
+
+        return $record;
+        
+    }
+
+    // This fuction is executed when the module is
+    // added to a page and that page is loaded
     public function get_content() {
         if ($this->content !== null) {
           return $this->content;
         }
+        // The global USER variable can be used to access
+        // information about the user currently logged in
+        global $USER;
 
         $url = "https://www.proprofs.com/api/classroom/v1/reports/users/";
 
+        // replace applicable fields
         $data = [
-            "token" => "<token>",
-            "username" => "<username>",
-            "start" => 1,
-            "num" => 100
+            "token" = <api token>,
+            "username" => <proprofs username>,
+            "email_or_id" => $USER->email
         ];
 
         $curl = curl_init($url);
@@ -65,25 +85,35 @@ class block_proprofs extends block_base {
         $response = json_decode(curl_exec($curl), true);
         curl_close($curl);
 
-        global $DB;
-        $DB->
-
-        $this->content->header = "ProProfs";
-
         if($response["status"] == "SUCCESS") {
-            $studentList = "Name, ID, Email";
-            foreach($response["result"] as $user) {
-                foreach($user["Group"] as $group) {
-                    if($group == "1234-1S") {
-                        $studentList = $studentList . "<br>" . 
-                            $user["Name"] . " " .
-                            $user["UID"] . " " .
-                            $user["Email"];
-                    }
-                }
-            }
+
+            $this->content->text = $this->storeUserData();
+            // $studentList = "Name  ID  Email";
+            // foreach($response["result"] as $user) {
+            //     $studentList .= "<br>" . 
+            //         $user["Name"] . " " .
+            //         $user["ID"] . " " .
+            //         $user["Email"];
+            //     // $record = new stdClass;
+            //     // $record->id = $user["ID"];
+            //     // $record->firstname = $user["Name"];
+            //     // $record->email = $user["Email"];
+            //     // $DB->insert_record("user", $record);
+            //     // foreach($user["Group"] as $group) {
+            //     //     if($group == "1234-1S") {
+            //     //         $studentList .= "<br>" . 
+            //     //             $user["Name"] . " " .
+            //     //             $user["UID"] . " " .
+            //     //             $user["Email"];
+            //     //     }
+            //     // }
+            // }
             
-            $this->content->text   = $studentList;
+            // $this->content->text      = $studentList;
+            // $this->content->text   = $response["result"][1]["Name"];
+            // foreach($response["result"][2]["Group"] as $group) {
+            //     $this->content->text .= "<br>" . $group;
+            // };
             // $this->content->footer = "";
         } else if($response["status"] == "ERROR") {
             $this->content->text = "An error occured: " . $response["error"];
